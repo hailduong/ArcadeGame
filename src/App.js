@@ -1,48 +1,20 @@
 import  $ from "jquery";
+import swal from "sweetalert";
 
 const COL_WIDTH = 101;
 const ROW_HEIGHT = 81;
 const BOARD_WIDTH = COL_WIDTH * 5;
 const BOARD_HEIGHT = ROW_HEIGHT * 6;
-// Enemies our player must avoid
-var Enemy = function() {
-	// Variables applied to each of our instances go here,
-	// we've provided one for you to get started
-
-	// The image/sprite for our enemies, this uses
-	// a helper we've provided to easily load images
-	this.sprite = 'images/enemy-bug.png';
-
-};
-
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
-Enemy.prototype.update = function(dt) {
-	// You should multiply any movement by the dt parameter
-	// which will ensure the game runs at the same speed for
-	// all computers.
-};
-
-// Draw the enemy on the screen, required method for game
-Enemy.prototype.render = function() {
-	ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
-
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-
-
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-
+const WATER_ROW_TOP = 0;
 
 class Player {
 	constructor() {
 		this.sprite = 'images/char-boy.png';
+		this.width = 101; // the width of the sprite
+		this.offset = 17; // the offset from the margin of the sprite to the character itself
+
 		this.setInitialPosition();
-		this.setupKeyboardNavigation();
+		this.handleInput();
 	}
 
 	setInitialPosition() {
@@ -51,10 +23,8 @@ class Player {
 		this.y = 5;
 	}
 
-	setupKeyboardNavigation() {
-
+	handleInput() {
 		const allowedKeys = {37: 'left', 38: 'up', 39: 'right', 40: 'down'};
-
 		$(document).keyup((event) => {
 			const keyCode = event.keyCode;
 			const key = allowedKeys[keyCode];
@@ -84,52 +54,91 @@ class Player {
 		})
 	}
 
-	render() {
+	update() {
 		const {x, y} = this;
-		const left = x * COL_WIDTH;
-		const top = y * ROW_HEIGHT;
+		this.left = x * COL_WIDTH;
+		this.top = y * ROW_HEIGHT;
+		this.collisionLeft = this.left + this.offset;
+		this.collisionRight = this.left + this.width - this.offset;
+	}
+
+	render() {
+		ctx.drawImage(Resources.get(this.sprite), this.left, this.top);
+	}
+}
+
+
+class Enemy {
+	constructor(speed) {
+		this.speed = speed;
+		this.sprite = 'images/enemy-bug.png';
+		this.width = 101;
+		this.standardDeltaTime = (1000 / 60) / 1000; // for 60fps
+		this.setInitialPosition();
+	}
+
+	setInitialPosition() {
+		this.left = 0;
+		this.setRandomRow();
+
+	}
+
+	setRandomRow() {
+		// y will be added one row, because we do not want the enemy to be created on the water row
+		this.top = Math.round(Math.random() * 2) * ROW_HEIGHT + ROW_HEIGHT;
+	}
+
+	update(dt) {
+
+		// This will move the enemy
+		const left = this.left;
+
+		// Let's add an extra column to the width, 
+		// so there is a time when we do not see the enemies on board
+		const bufferWidth = BOARD_WIDTH + COL_WIDTH;
+
+		// Need to multiple with the dt, the standard one is 0.016666... for 60fps
+		// If the time it took for the previous frame was more than the standard,
+		// then the distance should be increased as well
+		const distance = this.speed * (dt / this.standardDeltaTime);
+
+		if (left > bufferWidth) {
+			this.setInitialPosition();
+		} else {
+			this.left = left + distance;
+		}
+
+		this.collisionLeft = this.left;
+		this.collisionRight = this.left + this.width;
+	}
+
+	render() {
+		const {left, top} = this;
 		ctx.drawImage(Resources.get(this.sprite), left, top);
 	}
 }
 
 
-class Enemies {
-	constructor(speed) {
-		this.speed = speed;
-		this.sprite = 'images/enemy-bug.png';
-		this.setInitialPosition();
-		
-	}
+global.checkCollisions = () => {
+	// Check collision with enemy
+	allEnemies.forEach(enemy => {
+		const isTopOverlap = enemy.top === player.top;
+		const isLeftOverlap = enemy.collisionRight - player.collisionLeft > 0
+			&& player.collisionRight - enemy.collisionLeft > 0;
+		const overlap = isTopOverlap && isLeftOverlap;
 
-	setInitialPosition() {
-		this.x = 0;
-		this.setRandomRow();
-
-	}
-	
-	setRandomRow() {
-		// y will be added one row, because we do not want the enemy to be created on the water row
-		this.y = Math.round(Math.random() * 2) * ROW_HEIGHT + ROW_HEIGHT;
-	}
-
-	update() {
-		
-		// This will move the enemy
-		const x = this.x;
-
-		if (x > BOARD_WIDTH) {
-			this.setInitialPosition();
-		} else {
-			this.x = x + this.speed;
+		if (overlap) {
+			swal("You are eaten!", "Sorry! You are eaten by that scary bug.", "error");
+			player.setInitialPosition()
 		}
-	}
+	});
 
-	render() {
-		const {x, y} = this;
-		ctx.drawImage(Resources.get(this.sprite), x, y);
+	// Check collision with the water row.
+	if (WATER_ROW_TOP === player.top) {
+		global.userWon = true;
+		swal("You win", "Congratulation! You have crossed the street", "success")
 	}
-}
+};
 
-window.$ = $;
-window.player = new Player();
-window.allEnemies = [new Enemies(2), new Enemies(1), new Enemies(4)];
+global.player = new Player();
+global.allEnemies = [new Enemy(2), new Enemy(1), new Enemy(4)];
