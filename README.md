@@ -1,5 +1,4 @@
 # CROSS THE STREET
-===============================
 
 ##. I. How to play?
 
