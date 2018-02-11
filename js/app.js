@@ -76,169 +76,25 @@ module.exports = __webpack_require__(1);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _jquery = __webpack_require__(2);
-
-var _jquery2 = _interopRequireDefault(_jquery);
 
 var _sweetalert = __webpack_require__(5);
 
 var _sweetalert2 = _interopRequireDefault(_sweetalert);
 
+var _Player = __webpack_require__(8);
+
+var _Player2 = _interopRequireDefault(_Player);
+
+var _Enemy = __webpack_require__(9);
+
+var _Enemy2 = _interopRequireDefault(_Enemy);
+
+var _constants = __webpack_require__(10);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var COL_WIDTH = 101;
-var ROW_HEIGHT = 81;
-var BOARD_WIDTH = COL_WIDTH * 5;
-var BOARD_HEIGHT = ROW_HEIGHT * 6;
-var WATER_ROW_TOP = 0;
-
-var Player = function () {
-	function Player() {
-		_classCallCheck(this, Player);
-
-		this.sprite = 'images/char-boy.png';
-		this.width = 101; // the width of the sprite
-		this.offset = 17; // the offset from the margin of the sprite to the character itself
-
-		this.setInitialPosition();
-		this.handleInput();
-	}
-
-	_createClass(Player, [{
-		key: "setInitialPosition",
-		value: function setInitialPosition() {
-			// Set initial position of the player to the grass row
-			this.x = Math.round(Math.random() * 4);
-			this.y = 5;
-		}
-	}, {
-		key: "handleInput",
-		value: function handleInput() {
-			var _this = this;
-
-			var allowedKeys = { 37: 'left', 38: 'up', 39: 'right', 40: 'down' };
-			(0, _jquery2.default)(document).keyup(function (event) {
-				var keyCode = event.keyCode;
-				var key = allowedKeys[keyCode];
-
-				var x = _this.x,
-				    y = _this.y;
-
-				switch (key) {
-					case "left":
-						{
-							x > 0 && _this.x--;
-							break;
-						}
-
-					case "right":
-						{
-							x < 4 && _this.x++;
-							break;
-						}
-
-					case "up":
-						{
-							y > 0 && _this.y--;
-							break;
-						}
-
-					case "down":
-						{
-							y < 5 && _this.y++;
-						}
-				}
-			});
-		}
-	}, {
-		key: "update",
-		value: function update() {
-			var x = this.x,
-			    y = this.y;
-
-			this.left = x * COL_WIDTH;
-			this.top = y * ROW_HEIGHT;
-			this.collisionLeft = this.left + this.offset;
-			this.collisionRight = this.left + this.width - this.offset;
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			ctx.drawImage(Resources.get(this.sprite), this.left, this.top);
-		}
-	}]);
-
-	return Player;
-}();
-
-var Enemy = function () {
-	function Enemy(speed) {
-		_classCallCheck(this, Enemy);
-
-		this.speed = speed;
-		this.sprite = 'images/enemy-bug.png';
-		this.width = 101;
-		this.standardDeltaTime = 1000 / 60 / 1000; // for 60fps
-		this.setInitialPosition();
-	}
-
-	_createClass(Enemy, [{
-		key: "setInitialPosition",
-		value: function setInitialPosition() {
-			this.left = 0;
-			this.setRandomRow();
-		}
-	}, {
-		key: "setRandomRow",
-		value: function setRandomRow() {
-			// y will be added one row, because we do not want the enemy to be created on the water row
-			this.top = Math.round(Math.random() * 2) * ROW_HEIGHT + ROW_HEIGHT;
-		}
-	}, {
-		key: "update",
-		value: function update(dt) {
-
-			// This will move the enemy
-			var left = this.left;
-
-			// Let's add an extra column to the width, 
-			// so there is a time when we do not see the enemies on board
-			var bufferWidth = BOARD_WIDTH + COL_WIDTH;
-
-			// Need to multiple with the dt, the standard one is 0.016666... for 60fps
-			// If the time it took for the previous frame was more than the standard,
-			// then the distance should be increased as well
-			var distance = this.speed * (dt / this.standardDeltaTime);
-
-			if (left > bufferWidth) {
-				this.setInitialPosition();
-			} else {
-				this.left = left + distance;
-			}
-
-			this.collisionLeft = this.left;
-			this.collisionRight = this.left + this.width;
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			var left = this.left,
-			    top = this.top;
-
-			ctx.drawImage(Resources.get(this.sprite), left, top);
-		}
-	}]);
-
-	return Enemy;
-}();
-
-global.checkCollisions = function () {
+window.checkCollisions = function () {
 	// Check collision with enemy
 	allEnemies.forEach(function (enemy) {
 		var isTopOverlap = enemy.top === player.top;
@@ -252,15 +108,14 @@ global.checkCollisions = function () {
 	});
 
 	// Check collision with the water row.
-	if (WATER_ROW_TOP === player.top) {
-		global.userWon = true;
+	if (_constants.WATER_ROW_TOP === player.top) {
+		window.userWon = true;
 		(0, _sweetalert2.default)("You win", "Congratulation! You have crossed the street", "success");
 	}
 };
 
-global.player = new Player();
-global.allEnemies = [new Enemy(2), new Enemy(1), new Enemy(4)];
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+window.player = new _Player2.default();
+window.allEnemies = [new _Enemy2.default(2), new _Enemy2.default(1), new _Enemy2.default(4)];
 
 /***/ }),
 /* 2 */
@@ -11116,6 +10971,206 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _jquery = __webpack_require__(2);
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _constants = __webpack_require__(10);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Player = function () {
+	function Player() {
+		_classCallCheck(this, Player);
+
+		this.sprite = 'images/char-boy.png';
+		this.width = 101; // the width of the sprite
+		this.offset = 17; // the offset from the margin of the sprite to the character itself
+
+		this.setInitialPosition();
+		this.handleInput();
+	}
+
+	_createClass(Player, [{
+		key: "setInitialPosition",
+		value: function setInitialPosition() {
+			// Set initial position of the player to the grass row
+			this.x = Math.round(Math.random() * 4);
+			this.y = 5;
+		}
+	}, {
+		key: "handleInput",
+		value: function handleInput() {
+			var _this = this;
+
+			var allowedKeys = { 37: 'left', 38: 'up', 39: 'right', 40: 'down' };
+			(0, _jquery2.default)(document).keyup(function (event) {
+				var keyCode = event.keyCode;
+				var key = allowedKeys[keyCode];
+
+				var x = _this.x,
+				    y = _this.y;
+
+				switch (key) {
+					case "left":
+						{
+							x > 0 && _this.x--;
+							break;
+						}
+
+					case "right":
+						{
+							x < 4 && _this.x++;
+							break;
+						}
+
+					case "up":
+						{
+							y > 0 && _this.y--;
+							break;
+						}
+
+					case "down":
+						{
+							y < 5 && _this.y++;
+						}
+				}
+			});
+		}
+	}, {
+		key: "update",
+		value: function update() {
+			var x = this.x,
+			    y = this.y;
+
+			this.left = x * _constants.COL_WIDTH;
+			this.top = y * _constants.ROW_HEIGHT;
+			this.collisionLeft = this.left + this.offset;
+			this.collisionRight = this.left + this.width - this.offset;
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			ctx.drawImage(Resources.get(this.sprite), this.left, this.top);
+		}
+	}]);
+
+	return Player;
+}();
+
+exports.default = Player;
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _constants = __webpack_require__(10);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Enemy = function () {
+	function Enemy(speed) {
+		_classCallCheck(this, Enemy);
+
+		this.speed = speed;
+		this.sprite = 'images/enemy-bug.png';
+		this.width = 101;
+		this.standardDeltaTime = 1000 / 60 / 1000; // for 60fps
+		this.setInitialPosition();
+	}
+
+	_createClass(Enemy, [{
+		key: "setInitialPosition",
+		value: function setInitialPosition() {
+			this.left = 0;
+			this.setRandomRow();
+		}
+	}, {
+		key: "setRandomRow",
+		value: function setRandomRow() {
+			// y will be added one row, because we do not want the enemy to be created on the water row
+			this.top = Math.round(Math.random() * 2) * _constants.ROW_HEIGHT + _constants.ROW_HEIGHT;
+		}
+	}, {
+		key: "update",
+		value: function update(dt) {
+
+			// This will move the enemy
+			var left = this.left;
+
+			// Let's add an extra column to the width, 
+			// so there is a time when we do not see the enemies on board
+			var bufferWidth = _constants.BOARD_WIDTH + _constants.COL_WIDTH;
+
+			// Need to multiple with the dt, the standard one is 0.016666... for 60fps
+			// If the time it took for the previous frame was more than the standard,
+			// then the distance should be increased as well
+			var distance = this.speed * (dt / this.standardDeltaTime);
+
+			if (left > bufferWidth) {
+				this.setInitialPosition();
+			} else {
+				this.left = left + distance;
+			}
+
+			this.collisionLeft = this.left;
+			this.collisionRight = this.left + this.width;
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var left = this.left,
+			    top = this.top;
+
+			ctx.drawImage(Resources.get(this.sprite), left, top);
+		}
+	}]);
+
+	return Enemy;
+}();
+
+exports.default = Enemy;
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var COL_WIDTH = exports.COL_WIDTH = 101;
+var ROW_HEIGHT = exports.ROW_HEIGHT = 81;
+var BOARD_WIDTH = exports.BOARD_WIDTH = COL_WIDTH * 5;
+var BOARD_HEIGHT = exports.BOARD_HEIGHT = ROW_HEIGHT * 6;
+var WATER_ROW_TOP = exports.WATER_ROW_TOP = 0;
 
 /***/ })
 /******/ ])["default"];
